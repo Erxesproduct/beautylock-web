@@ -1,0 +1,35 @@
+﻿code,name,parent code
+BL,Beauty Lock,
+BL-SKIN,Арьс арчилгаа,BL
+BL-MAKEUP,Нүүр будалт,BL
+BL-HAIR-BODY,"Үс, бие",BL
+BL-KIDS,Хүүхдэд,BL
+BL-MEN,Эрэгтэй,BL
+BL-TOOLS,Туслах хэрэгсэл,BL
+BL-HAIR-CARE,Үсний тэжээл,BL-SKIN
+BL-HAIR-SERUM,Үс ургуулагч,BL-SKIN
+BL-CONDITIONER,Ангижруулагч,BL-HAIR-BODY
+BL-SHAMPOO,Шампунь,BL-HAIR-BODY
+BL-SUN,Нарны тос,BL-SKIN
+BL-LIP-EYE,"Уруул, нүд",BL-SKIN
+BL-POWDER,"Пудр, будаг түгжигч",BL-SKIN
+BL-BASE,"Күшн, тональ, өө дарагч",BL-MAKEUP
+BL-PRIMER,"Праймер, суурь",BL-MAKEUP
+BL-BODY,Бие арчилгаа,BL-HAIR-BODY
+BL-DEEP-CLEAN,Гүн цэвэрлэгээ,BL-SKIN
+BL-PEELING,Гуужуулагч,BL-SKIN
+BL-CLEANSING-WATER,Цэвэрлэгч ус,BL-SKIN
+BL-CLEANSING-OIL,Тосон цэвэрлэгч,BL-SKIN
+BL-FOAM,Хөөсөн цэвэрлэгч,BL-SKIN
+BL-TONER,"Тонер, тонер пад",BL-SKIN
+BL-CLEANSING-PAD,Цэвэрлэгээний пад,BL-SKIN
+BL-MIST,"Эссенз, мист",BL-SKIN
+BL-CREAM,Чийгшүүлэгч тос,BL-SKIN
+BL-EYE,Зовхины тос,BL-SKIN
+BL-SERUM,"Ампул, серум",BL-SKIN
+BL-SHEET-MASK,Салфеткан маск,BL-SKIN
+BL-CLAY-MASK,"Хөөсөн, шавар маск",BL-SKIN
+BL-SLEEPING-MASK,Унтлагын маск,BL-SKIN
+BL-PEEL-MASK,Хуулдаг маск,BL-SKIN
+BL-HAND-FOOT,"Гар, хөлийн маск",BL-SKIN
+BL-DELIVERY,Хүргэлт,BL
