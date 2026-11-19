@@ -58,19 +58,19 @@ export function BuyBox({ slug, variants }: { slug: string; variants: V[] }) {
       {out ? (
         <p className="mt-5 rounded-[18px] bg-cream px-4 py-3 text-[15px] font-bold text-cocoa-2">Одоогоор дууссан. Ирэх хугацааг утсаар лавлаарай.</p>
       ) : (
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="mt-5 grid grid-cols-[auto_1fr] items-center gap-3 sm:grid-cols-[auto_1fr_auto]">
           <div className="flex h-14 items-center rounded-full bg-cream px-1">
-            <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center rounded-full hover:bg-white" aria-label="Цөөлөх">
+            <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-9 place-items-center rounded-full hover:bg-white sm:w-11" aria-label="Цөөлөх">
               <MinusIcon size={16} />
             </button>
             <span className="display w-8 text-center text-[18px] font-bold tabular-nums" aria-live="polite">
               {qty}
             </span>
-            <button type="button" onClick={() => setQty((q) => Math.min(cap, q + 1))} disabled={qty >= cap} className="grid h-11 w-11 place-items-center rounded-full hover:bg-white disabled:opacity-30" aria-label="Нэмэх">
+            <button type="button" onClick={() => setQty((q) => Math.min(cap, q + 1))} disabled={qty >= cap} className="grid h-11 w-9 place-items-center rounded-full hover:bg-white disabled:opacity-30 sm:w-11" aria-label="Нэмэх">
               <PlusIcon size={16} />
             </button>
           </div>
-          <button type="button" onClick={() => cart.add(v.id, qty)} disabled={maxQty(v.id) === 0} className="btn btn-cherry h-14 flex-1 text-[16.5px]">
+          <button type="button" onClick={() => cart.add(v.id, qty)} disabled={maxQty(v.id) === 0} className="btn btn-cherry h-14 px-4 text-[15.5px] sm:px-6 sm:text-[16.5px]">
             Сагсанд нэмэх
           </button>
           <button
@@ -78,7 +78,7 @@ export function BuyBox({ slug, variants }: { slug: string; variants: V[] }) {
             onClick={() => hearts.toggle(slug)}
             aria-pressed={liked}
             aria-label={liked ? "Хадгалснаас хасах" : "Хадгалах"}
-            className={`grid h-14 w-14 place-items-center rounded-full bg-white shadow-[inset_0_0_0_2px_var(--color-straw-2)] transition hover:bg-straw ${liked ? "text-cherry" : ""}`}
+            className={`grid h-14 w-14 place-items-center justify-self-center rounded-full bg-white shadow-[inset_0_0_0_2px_var(--color-straw-2)] transition hover:bg-straw ${liked ? "text-cherry" : ""}`}
           >
             <HeartIcon size={22} filled={liked} />
           </button>
@@ -88,7 +88,7 @@ export function BuyBox({ slug, variants }: { slug: string; variants: V[] }) {
               cart.add(v.id, qty);
               router.push("/cart");
             }}
-            className="btn btn-cocoa h-12 w-full"
+            className="btn btn-cocoa h-14 sm:col-span-3 sm:h-12"
           >
             Шууд захиалах
           </button>
