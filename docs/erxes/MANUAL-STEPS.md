@@ -107,3 +107,42 @@ erxes:
    Хүлээгдэж байна → Баталгаажсан (100% paid) → Савлаж байна → Хүргэлтэд гарсан → Хүргэгдсэн, plus Цуцлагдсан.
 3. **Frontline → Forms → (order form) → Settings**: create a sales card in «Хүлээгдэж байна» for every submission.
    Staff move it to «Баталгаажсан» when the erxes invoice shows paid.
+
+## 1.5 Test order from cart to receipt
+
+**Verified on a local production build:** `npm run test:order -- http://127.0.0.1:3470` passes **29 checks** (empty
+cart, unknown / sold-out product, option prices, quantity limit, the browser's price ignored, 6,000₮ fee, free above
+500,000₮, countryside needs an aimag, district / khoroo / address, phone, email, company registry, same checkout key →
+same reference, payment check 400 / 503). Without erxes the order returns `503 not_configured` and the checkout shows
+the phone number and keeps the cart. `--send` was **not run** (env vars not set). No payment was made.
+
+Steps for the real test (authorized credentials only):
+
+1. **Frontline → Forms → Create** «Вэбсайт захиалга» with fields Нэр, Утас, Имэйл, Захиалга; copy the form id and the
+   field ids into `ERXES_ORDER_FORM_ID` / `ERXES_ORDER_FIELD_IDS`. Set `ERXES_API_URL`, `ERXES_PAYMENT_IDS`. Redeploy.
+2. `npm run test:order -- https://<production url> --send`: one order, two items + delivery.
+3. Pay the invoice only with QPay's test merchant or with explicit authorization for a real charge; check that
+   `/order/<reference>` shows «Төлбөр төлөгдлөө», move the card, issue the eBarimt, mark delivered, void the test.
+
+## Permissions (erxes)
+
+- Staff who handle orders: Sales (cards), Forms (submissions), Payments (view invoices), eBarimt (issue).
+- Only the owner: Settings → Payments, Settings → eBarimt, product import.
+- The website uses only public erxes mutations; it needs no admin token.
+
+---
+
+## Open questions for Beauty Lock
+
+1. **Free delivery**: Zochil delivery options say free above **500,000₮**, the shop's payment rule text says
+   **300,000₮**. The site uses 500,000₮ (what Zochil's checkout charges). Which is right?
+2. **Countryside fee**: 6,000₮ to the car / post in UB; the car or post fee itself is agreed by phone. Correct?
+3. **Stock**: 14 products have stock tracking on Zochil and are all at 0 (shown sold out). Are they really out?
+4. **Pick-up** at 3, 4-р хороолол / Peace mall: offer it online?
+5. **StorePay / Pocket Zero**: add them in erxes as extra payment methods?
+6. **Duplicates**: «So'Natural Red Peel Tingle Serum» ×3 (29,000₮ / 79,000₮ / options), «TFIT Pore primer» ×2,
+   «Fascy Green+ Suncream» ×2, Recipebox kids sun cream / lip colour ×2: merge or different items?
+7. **Brands**: «Glu» products and Tranexamic Mela were filed under Angel's Liquid (Zochil brand field); Dermal hand
+   mask was under PLDQ: confirm.
+8. **TIN / PosAPI** for eBarimt, **QPay merchant** outside Zochil.
+9. **Domain**: point beautylock.mn at the new site when ready.
