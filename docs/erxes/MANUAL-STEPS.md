@@ -1,0 +1,148 @@
+# Beauty Lock: erxes manual steps
+
+Owner of every step below: **Terbish**, with Beauty Lock for credentials and decisions.
+
+These steps happen in the erxes 3.0 admin (and at QPay / ebarimt.mn), not in code. The website reads the results
+through the environment variables in `.env.example`. Never commit their values; set them in
+**Vercel → beautylock-web → Settings → Environment Variables** and redeploy.
+
+There is no erxes instance for Beauty Lock yet ("erxes 3.0: NOT SET"). Create the workspace first.
+
+| Task | Website | erxes / external (manual) |
+| --- | --- | --- |
+| [1.1] Products, categories, prices | done: 162 products (182 SKUs with options) imported from Zochil | import the CSVs (section 1.1) |
+| [1.2] QPay | done: invoice + status check through the erxes payment plugin | **blocked**: QPay merchant credentials, erxes payment method (1.2) |
+| [1.3] eBarimt | done: person / company choice, registry number validated | **blocked**: PosAPI registration, TIN; receipts are issued by erxes (1.3) |
+| [1.4] Delivery, fees, statuses | done: Ulaanbaatar and countryside 6,000₮, free above 500,000₮; address forms | delivery products, pipeline stages (1.4) |
+| [1.5] Full journey test | validation verified (29 checks) | **blocked**: a real order needs the env vars and 1.2 / 1.3 (1.5) |
+
+---
+
+## 1.1 Products, categories, prices
+
+Source: beautylock.mn (Zochil shop 6709), read 2026-11-19: **162 products**, 9 of them with options (size / shade),
+**182 sellable SKUs**, MNT prices 1,500₮–216,000₮, 435 photos (pre-sized WebP on the website).
+
+- Groups from the Zochil category tree: skin care 94, makeup 41, hair & body 23, kids 21, men 3, tools 7.
+- Kinds (cleansers, toners, serums, creams, sun, masks, primers, cushions, shampoo, …) and the 6-step routine come
+  from the Zochil sub-categories; 11 products without one got their kind from the name.
+- Skin concerns (brightening, acne, pores, wrinkles, dry, sensitive) come from the Zochil «BEAUTY LOCK BOX»
+  categories plus words in the name / description. They are labelled as guidance on the site, not a diagnosis.
+- Brands (20): from the start of the product name, else the Zochil brand field.
+- Prices: Zochil price; a Zochil sale price only where it is set. The 11.07–11.15 sale campaign had ended when the
+  catalog was read, so its prices were **not** used.
+- Stock: only 14 products track stock on Zochil, all at 0 → shown as sold out. The others are orderable
+  (not counted). Open question 3.
+- Old Zochil URLs (`/products/<category>/<id>`, category pages, `/about`, `/faq`) redirect to the new pages.
+
+Files (made by `npm run export:erxes` from `src/data/catalog.json`):
+
+- `docs/erxes/beautylock-categories.csv`: 34 rows, parent `BL`, groups `BL-SKIN`, `BL-MAKEUP`, …, kinds under them,
+  `BL-DELIVERY`.
+- `docs/erxes/beautylock-products.csv`: 182 rows, code `BL-<zochilId>` or `BL-<zochilId>-<variantId>`, name, category,
+  unit price, price before sale, brand, option, Zochil stock, skin concerns, photo path.
+
+Steps:
+
+1. **Products & services → Categories**: import `beautylock-categories.csv` (parents first; already ordered).
+2. **Settings → Import & Export → Import → Products**: upload `beautylock-products.csv`. Map `code → Code`,
+   `name → Name`, `category code → Category code`, `unit price → Unit price`, `type → Type`. Keep the codes: website
+   orders name every line with its `BL-…` code.
+3. Brands: **Products & services → Brands** (or a product property «Брэнд») from the `brand` column.
+4. **Inventories → Remainders**: enter real stock per branch (3, 4-р хороолол / Peace mall).
+5. Photos: upload from `public/images/p/` (path in the CSV) if erxes should show them too.
+
+## 1.2 Payment (QPay)
+
+Zochil: QPay is enabled (`has_qpay`); the order is confirmed only after 100% payment of goods and delivery.
+StorePay and Pocket are also listed on Zochil (a post says split payment is possible) but are not offered on the
+website yet (open question 5).
+
+How the website uses erxes (verified in the erxes 3.0 source, `backend/plugins/payment_api`):
+
+- `generateInvoiceUrl` (public) creates the invoice after the order is saved in erxes; the customer pays on the erxes
+  payment page and returns to `/order/<reference>`.
+- `invoicesCheck` (public) is asked every 5 s on `/order/<reference>`; erxes claims a paid invoice only once.
+- No order is sent to QPay unless it was first recorded in erxes (no money asked for an order staff cannot see).
+
+Steps:
+
+1. Get Beauty Lock's QPay merchant credentials (`client_id`, `client_secret`, `invoice_code`); ask QPay / Zochil
+   whether the current merchant (Khan bank) can be used outside Zochil.
+2. **Settings → Payments → Add → QPay (v2)**: enter them. Make a 100₮ test invoice in erxes.
+3. Copy the payment method's `_id` into Vercel as `ERXES_PAYMENT_IDS`. If StorePay / Pocket are added in erxes later,
+   add their ids too: the erxes payment page then lets the customer choose.
+4. **Not yet tested**: nothing has been run against a real QPay merchant. Do not call payments working until step 2
+   and section 1.5 pass with authorized credentials.
+
+## 1.3 eBarimt
+
+The website never makes a receipt. The checkout asks «Хувь хүн» or «Байгууллага» (7-digit registry number, checked on
+the server) and writes it on the order. The receipt is issued in erxes by staff (or the POS) after payment.
+
+1. Collect from Beauty Lock: company TIN (Zochil has no `regno`), district code, VAT status, product classification
+   codes (cosmetics).
+2. Register for **PosAPI 3.0** (ebarimt.mn) and install the PosAPI service.
+3. **Settings → eBarimt**: PosAPI URL, TIN, district code, VAT switches; assign it to the website pipeline and to the
+   POS of both branches.
+4. For every paid order: issue the receipt once (check the card first) and send the lottery number by SMS / email.
+
+## 1.4 Delivery zones, fees and order statuses
+
+Website (done), from Zochil shop 6709:
+
+| Option | Fee | Rule |
+| --- | --- | --- |
+| Улаанбаатар хот | 6,000₮, free above 500,000₮ | delivered the day after confirmation; district, khoroo 1–45, address |
+| Орон нутаг | 6,000₮, free above 500,000₮ | handed to the countryside car / post in UB; aimag + soum, address, car or post details |
+| Яаралтай (UB Cab) | by phone 8810-1053 | shown as text only, not an online option |
+
+- Pick-up at the branches is not offered on Zochil (open question 4).
+- Fees and limits live in `src/content/business.ts`; change them there and in the erxes delivery products.
+
+erxes:
+
+1. Import `docs/erxes/beautylock-delivery.csv` (`BL-DELIVERY-182` Улаанбаатар, `BL-DELIVERY-877` Орон нутаг, 6,000₮).
+2. **Sales → Boards → «Онлайн захиалга» → pipeline «Вэбсайт»**, stages (as on the website order page):
+   Хүлээгдэж байна → Баталгаажсан (100% paid) → Савлаж байна → Хүргэлтэд гарсан → Хүргэгдсэн, plus Цуцлагдсан.
+3. **Frontline → Forms → (order form) → Settings**: create a sales card in «Хүлээгдэж байна» for every submission.
+   Staff move it to «Баталгаажсан» when the erxes invoice shows paid.
+
+## 1.5 Test order from cart to receipt
+
+**Verified on a local production build:** `npm run test:order -- http://127.0.0.1:3470` passes **29 checks** (empty
+cart, unknown / sold-out product, option prices, quantity limit, the browser's price ignored, 6,000₮ fee, free above
+500,000₮, countryside needs an aimag, district / khoroo / address, phone, email, company registry, same checkout key →
+same reference, payment check 400 / 503). Without erxes the order returns `503 not_configured` and the checkout shows
+the phone number and keeps the cart. `--send` was **not run** (env vars not set). No payment was made.
+
+Steps for the real test (authorized credentials only):
+
+1. **Frontline → Forms → Create** «Вэбсайт захиалга» with fields Нэр, Утас, Имэйл, Захиалга; copy the form id and the
+   field ids into `ERXES_ORDER_FORM_ID` / `ERXES_ORDER_FIELD_IDS`. Set `ERXES_API_URL`, `ERXES_PAYMENT_IDS`. Redeploy.
+2. `npm run test:order -- https://<production url> --send`: one order, two items + delivery.
+3. Pay the invoice only with QPay's test merchant or with explicit authorization for a real charge; check that
+   `/order/<reference>` shows «Төлбөр төлөгдлөө», move the card, issue the eBarimt, mark delivered, void the test.
+
+## Permissions (erxes)
+
+- Staff who handle orders: Sales (cards), Forms (submissions), Payments (view invoices), eBarimt (issue).
+- Only the owner: Settings → Payments, Settings → eBarimt, product import.
+- The website uses only public erxes mutations; it needs no admin token.
+
+---
+
+## Open questions for Beauty Lock
+
+1. **Free delivery**: Zochil delivery options say free above **500,000₮**, the shop's payment rule text says
+   **300,000₮**. The site uses 500,000₮ (what Zochil's checkout charges). Which is right?
+2. **Countryside fee**: 6,000₮ to the car / post in UB; the car or post fee itself is agreed by phone. Correct?
+3. **Stock**: 14 products have stock tracking on Zochil and are all at 0 (shown sold out). Are they really out?
+4. **Pick-up** at 3, 4-р хороолол / Peace mall: offer it online?
+5. **StorePay / Pocket Zero**: add them in erxes as extra payment methods?
+6. **Duplicates**: «So'Natural Red Peel Tingle Serum» ×3 (29,000₮ / 79,000₮ / options), «TFIT Pore primer» ×2,
+   «Fascy Green+ Suncream» ×2, Recipebox kids sun cream / lip colour ×2: merge or different items?
+7. **Brands**: «Glu» products and Tranexamic Mela were filed under Angel's Liquid (Zochil brand field); Dermal hand
+   mask was under PLDQ: confirm.
+8. **TIN / PosAPI** for eBarimt, **QPay merchant** outside Zochil.
+9. **Domain**: point beautylock.mn at the new site when ready.
